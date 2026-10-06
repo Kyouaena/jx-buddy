@@ -35,9 +35,9 @@ export default function Workbench({ userName }: { userName: string }) {
     finally { busyRef.current = false; setBusy(false); }
   }, [refresh]);
   useEffect(() => {
-    if (!state || !["planning", "running"].includes(state.status) || error) return;
+    if (busy || !state || !["planning", "running"].includes(state.status) || error) return;
     const timer = setTimeout(() => { act("tick"); }, 900); return () => clearTimeout(timer);
-  }, [state, error, act]);
+  }, [state, error, act, busy]);
   async function create(value = goal) { if (!value.trim()) return; const result = await act("create", { goal: value, mode, fault, ...(mode === "live" ? { targets: { symbols: symbols.toUpperCase().split(/[,，\s]+/).filter(Boolean), reportYear } } : {}) }); if (result) { setGoal(""); setTab("evidence"); } }
   useEffect(() => {
     type Context = { registerTool: (tool: unknown, options: { signal: AbortSignal }) => Promise<void> | void };
