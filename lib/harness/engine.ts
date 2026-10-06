@@ -13,7 +13,22 @@ export function createState(goal: string, mode: "demo" | "live", memory = "", fa
   if (memory) trace(s, "memory.loaded", "已载入用户确认保存的研究偏好。");
   return s;
 }
-const prohibited = /(?:保证|确保|必然|一定|稳赚|确定).{0,12}(?:上涨|下跌|盈利|赚钱|收益)|(?:建议|推荐|应该|立即|务必).{0,12}(?:买入|卖出|加仓|减仓|做多|做空)|(?:买入|卖出|加仓|减仓|做多|做空)(?:建议|评级|信号)/;
+function prohibited(text: string) {
+  const guarantee = /(?:保证|确保|必然|一定|稳赚|确定|承诺)[^，,。；;！？!?\n]{0,12}(?:上涨|下跌|盈利|赚钱|收益)/g;
+  const action = /(?:建议|推荐|应该|立即|务必)[^，,。；;！？!?\n]{0,12}(?:买入|卖出|加仓|减仓|做多|做空)|(?:买入|卖出|加仓|减仓|做多|做空)(?:建议|评级|信号)/g;
+  const prefix = (index: number) => text.slice(Math.max(0, index - 80), index);
+  for (const match of text.matchAll(guarantee)) {
+    if (!/(?:不|不能|无法|未能|并非|不是|不作|不做|没有|不予|不会|不进行)(?:提供|作出|承诺)?\s*$/.test(prefix(match.index!))) return true;
+  }
+  for (const match of text.matchAll(action)) {
+    // "不建议买入" is still direct advice; only explicit content disclaimers are exempt.
+    const explicitDisclaimer = /^(?:建议|推荐|应该|立即|务必)/.test(match[0])
+      ? /(?:不提供|不输出|不包含|不构成|不代表|不作|不做|并非|不是|不能视为)(?:任何|直接|投资|交易|个股|对|的|\s)*$/.test(prefix(match.index!))
+      : /(?:不提供|不输出|不包含|不构成|不代表|不作|不做|并非|不是|不能视为)(?:任何|直接|投资|交易|个股|股票|对|的|买入|卖出|买卖|加仓|减仓|做多|做空|或|及|和|、|，|\/|\s)*$/.test(prefix(match.index!));
+    if (!explicitDisclaimer) return true;
+  }
+  return false;
+}
 export function validateReport(value: unknown, evidence: Evidence[]): Report {
   if (!value || typeof value !== "object") throw new Error("报告格式错误。");
   const r = structuredClone(value) as Report;
@@ -29,7 +44,7 @@ export function validateReport(value: unknown, evidence: Evidence[]): Report {
   r.title = normalize(r.title); r.summary = normalize(r.summary);
   r.claims.forEach(c => { c.text = normalize(c.text); });
   if (terminologyCorrected) r.limitations.push("PCF 中文术语已按字段口径规范为市现率（市值／经营现金流）；请核对原始值与统计口径。");
-  if (prohibited.test(JSON.stringify(r))) throw new Error("报告含直接买卖建议或确定性收益表述，已阻止发布。");
+  if (prohibited(JSON.stringify(r))) throw new Error("报告含直接买卖建议或确定性收益表述，已阻止发布。");
   return r;
 }
 function validatePlan(value: unknown, rt: Runtime): Task[] {
@@ -73,7 +88,7 @@ async function runNode(s: RunState, rt: Runtime) {
   }
   try {
     if (s.phase === "plan") {
-      if (prohibited.test(s.goal) || /(?:替我|帮我|自动).{0,6}(?:下单|交易|买入|卖出)/.test(s.goal)) throw new Error("请将目标改为事实研究或风险分析；工作台不提供自动交易、直接买卖建议或收益保证。");
+      if (prohibited(s.goal) || /(?:替我|帮我|自动).{0,6}(?:下单|交易|买入|卖出)/.test(s.goal)) throw new Error("请将目标改为事实研究或风险分析；工作台不提供自动交易、直接买卖建议或收益保证。");
       if (s.mode === "live") {
         if (!rt.model) throw new Error("模型尚未配置，不能执行真实研究。可新建构造数据演示。");
         if (!rt.tools.some(t => t.enabled)) throw new Error("没有可用金融工具，请先配置扶摇 API Key 或金融 MCP。");

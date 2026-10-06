@@ -59,3 +59,8 @@ test('PCF wording is normalized to price-to-cash-flow without changing raw value
  const r=validateReport({title:'研究',summary:'估值快照',limitations:[],claims:[{kind:'fact',text:'现金流市值比TTM（PCF）为13.2倍。',evidenceIds:['E1']}]},evidence);
  assert.equal(r.claims[0].text,'市现率TTM（PCF）为13.2倍。');assert.ok(r.limitations.some(l=>l.includes('PCF')));
 });
+test('compliance guard permits explicit disclaimers but still rejects real promises and advice', () => {
+ const base={title:'研究',limitations:[],claims:[{kind:'uncertain',text:'新闻证据缺失。',evidenceIds:[]}]};
+ for(const summary of ['不保证收益，也不提供买入建议。','本报告不构成买入评级。','无法保证股价上涨。','不提供任何买入或卖出建议。','不提供任何买入、卖出、加仓、减仓建议。'])assert.doesNotThrow(()=>validateReport({...base,summary},[]));
+ for(const summary of ['保证收益。','承诺收益。','建议立即买入。','不建议买入。','不保证收益，但推荐买入。','不提供投资建议，但推荐买入。'])assert.throws(()=>validateReport({...base,summary},[]),/买卖建议|收益/);
+});
