@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+const base = process.argv[2] || 'http://127.0.0.1:5173';
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) throw new Error('This local mock-auth test must only run against loopback.');
+const login = await fetch(`${base}/signin-with-chatgpt?return_to=%2F`, { redirect: 'manual' });
+const cookie = login.headers.get('set-cookie')?.split(';')[0]; assert.ok(cookie, 'local mock sign-in cookie');
+async function req(body, query = '', expected = 200, authenticated = true) {
+ const r = await fetch(`${base}/api/research${query}`, { ...(body ? {method:'POST', body:JSON.stringify(body)}:{}), headers:{ ...(authenticated ? {cookie}:{}), ...(body ? {'Content-Type':'application/json', Origin:base}: {}) } });
+ const value = await r.json(); assert.equal(r.status, expected, JSON.stringify(value)); return value;
+}
+await req(undefined, '', 401, false);
+await req({action:'create', goal:'', mode:'demo'}, '', 400);
+let { state: s } = await req({action:'create', goal:'集成验证：比较样本财务与风险', mode:'demo', fault:'none'});
+let r = await req({action:'tick', id:s.id, revision:s.revision}); s=r.state; assert.equal(s.status,'approval');
+await req({action:'approve', id:s.id, revision:0}, '', 409);
+s=(await req({action:'approve', id:s.id, revision:s.revision})).state;
+s=(await req({action:'tick', id:s.id, revision:s.revision})).state; assert.equal(s.evidence.length,1);
+s=(await req({action:'pause', id:s.id, revision:s.revision})).state;
+const paused=await req(undefined, `?id=${s.id}`); assert.equal(paused.state.status,'paused'); assert.ok(paused.checkpoints.length>=4);
+s=(await req({action:'resume', id:s.id, revision:s.revision})).state;
+for(let i=0;i<10 && s.status==='running';i++) s=(await req({action:'tick',id:s.id,revision:s.revision})).state;
+assert.equal(s.status,'review'); assert.equal(s.evidence.length,3); assert.equal(s.usage.calls,3);
+s=(await req({action:'accept',id:s.id,revision:s.revision})).state; assert.equal(s.status,'complete');
+const cps=await req(undefined,`?id=${s.id}`);
+const cp=cps.checkpoints.find(c=>c.revision===4); assert.ok(cp);
+s=(await req({action:'restore',id:s.id,revision:s.revision,checkpoint:cp.id})).state;
+assert.equal(s.status,'paused'); assert.equal(s.usage.calls,3);
+await req({action:'memory',text:'引用时注明统计口径',confirmed:false},'',400);
+await req({action:'memory',text:'引用时注明统计口径',confirmed:true});
+const fresh=await req({action:'create',goal:'记忆验证',mode:'demo'}); assert.equal(fresh.state.memory,'引用时注明统计口径');
+await req({action:'memory',text:'',confirmed:true});
+await req(undefined,'?id=nonexistent',404);
+const csrf=await fetch(`${base}/api/research`, {method:'POST',headers:{cookie,Origin:'https://foreign.invalid','Content-Type':'application/json'},body:JSON.stringify({action:'memory',text:'unexpected',confirmed:true})}); assert.equal(csrf.status,403);
+console.log('PASS: local HTTP / D1 create, approval, pause, recovery, report, checkpoint rollback, memory consent, auth, revision conflict, CSRF, missing thread.');
+console.log(JSON.stringify({id:s.id,revision:s.revision,checkpointCount:cps.checkpoints.length,evidenceCount:3}));
