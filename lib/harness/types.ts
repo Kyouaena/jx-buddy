@@ -12,6 +12,7 @@ export type RunState = {
   traces: Trace[]; report: Report | null; warnings: string[]; revision: number;
   usage: { calls: number; tokens: number; elapsedMs: number }; budget: { calls: number; tokens: number; elapsedMs: number };
   fault: "none" | "tool_failure" | "missing_data" | "stale_data";
+  targets?: { symbols: string[]; reportYear: number };
 };
 export type ToolRegistration = { name: ToolName; description: string; permission: "read"; enabled: boolean };
-export type Runtime = { tools: ToolRegistration[]; model: boolean; callTool: (name: ToolName, goal: string) => Promise<Omit<Evidence, "id">>; modelJSON: (prompt: string) => Promise<{ value: unknown; tokens: number }> };
+export type Runtime = { tools: ToolRegistration[]; model: boolean; callTool: (name: ToolName, goal: string, targets?: RunState["targets"]) => Promise<Omit<Evidence, "id">>; modelJSON: (prompt: string) => Promise<{ value: unknown; tokens: number }> };

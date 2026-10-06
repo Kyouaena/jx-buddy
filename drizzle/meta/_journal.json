@@ -8,6 +8,13 @@
       "when": 1791269578284,
       "tag": "0000_odd_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791292690028,
+      "tag": "0001_tough_proteus",
+      "breakpoints": true
     }
   ]
 }

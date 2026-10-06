@@ -16,3 +16,8 @@ export const checkpoints = sqliteTable("research_checkpoints", {
 export const memories = sqliteTable("research_memories", {
   owner: text("owner").primaryKey(), text: text("text").notNull(), updated: integer("updated").notNull(),
 });
+export const modelBudget = sqliteTable("model_budget", {
+  id: text("id").primaryKey(), calls: integer("calls").notNull().default(0),
+  committedMicroUsd: integer("committed_micro_usd").notNull().default(0),
+  observedMicroUsd: integer("observed_micro_usd").notNull().default(0), updated: integer("updated").notNull(),
+});
