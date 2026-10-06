@@ -54,3 +54,8 @@ test("live planner can only choose enabled registered tools", async () => {
   const live: Runtime = { ...rt, model: true, modelJSON: async () => ({ value: { tasks: [{ title: "交易", tool: "place_order" }] }, tokens: 30 }) };
   const s = await advance(createState("经营情况研究", "live"), live); assert.equal(s.status, "failed"); assert.equal(s.tasks.length, 0); assert.equal(s.usage.tokens, 30);
 });
+test('PCF wording is normalized to price-to-cash-flow without changing raw values', () => {
+ const evidence=[{...demoEvidence('market_snapshot'),id:'E1'}];
+ const r=validateReport({title:'研究',summary:'估值快照',limitations:[],claims:[{kind:'fact',text:'现金流市值比TTM（PCF）为13.2倍。',evidenceIds:['E1']}]},evidence);
+ assert.equal(r.claims[0].text,'市现率TTM（PCF）为13.2倍。');assert.ok(r.limitations.some(l=>l.includes('PCF')));
+});

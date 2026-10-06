@@ -16,7 +16,7 @@ export function createState(goal: string, mode: "demo" | "live", memory = "", fa
 const prohibited = /(?:保证|确保|必然|一定|稳赚|确定).{0,12}(?:上涨|下跌|盈利|赚钱|收益)|(?:建议|推荐|应该|立即|务必).{0,12}(?:买入|卖出|加仓|减仓|做多|做空)|(?:买入|卖出|加仓|减仓|做多|做空)(?:建议|评级|信号)/;
 export function validateReport(value: unknown, evidence: Evidence[]): Report {
   if (!value || typeof value !== "object") throw new Error("报告格式错误。");
-  const r = value as Report;
+  const r = structuredClone(value) as Report;
   if (typeof r.title !== "string" || typeof r.summary !== "string" || !Array.isArray(r.claims) || !r.claims.length || !Array.isArray(r.limitations) || !r.limitations.every(x => typeof x === "string")) throw new Error("报告字段不完整。");
   const ids = new Map(evidence.map(e => [e.id, e]));
   for (const c of r.claims) {
@@ -24,6 +24,11 @@ export function validateReport(value: unknown, evidence: Evidence[]): Report {
     if (c.kind !== "uncertain" && !c.evidenceIds.length) throw new Error("核心结论缺少证据。");
     if (c.kind === "fact" && c.evidenceIds.some(id => ids.get(id)?.quality !== "ok")) throw new Error("存在缺失或过期数据，不能作为正常事实。");
   }
+  let terminologyCorrected = false;
+  const normalize = (text: string) => text.replace(/现金流市值比(?:率)?(\s*TTM)?(?=\s*[（(]PCF[）)])/gi, (_match, suffix: string | undefined) => { terminologyCorrected = true; return `市现率${suffix || ""}`; });
+  r.title = normalize(r.title); r.summary = normalize(r.summary);
+  r.claims.forEach(c => { c.text = normalize(c.text); });
+  if (terminologyCorrected) r.limitations.push("PCF 中文术语已按字段口径规范为市现率（市值／经营现金流）；请核对原始值与统计口径。");
   if (prohibited.test(JSON.stringify(r))) throw new Error("报告含直接买卖建议或确定性收益表述，已阻止发布。");
   return r;
 }
