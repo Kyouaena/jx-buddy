@@ -35,3 +35,7 @@ Codex 逐项核验真实报告发现模型将 PCF 写为“现金流市值比”
 合规否定句回归：先验证“不保证收益／不提供买入建议”被错误拦截（测试失败），再区分明确免责声明与真正承诺／建议；“不建议买入”仍属于直接建议，继续拦截。修复后重试报告步骤，财务与估值证据不重复请求。
 
 最终线上验证：三家公司财务和估值工具各调用一次；模型报告从失败检查点恢复后进入待复核，包含7条有引用的结论。累计模型请求6/15，保守预占约$0.0101/$1。未将真实金融原始值写入公开源码或测试记录。
+
+## iFinD integration verification
+
+The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.

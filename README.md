@@ -5,7 +5,7 @@
 
 个人投资研究 Agent 网页工作台。用研究目标创建线程，检查并批准执行计划，查看原始证据，复核报告；每一步保存到数据库，可暂停、重试和恢复。
 
-**当前版本：真实 OpenAI＋扶摇主链路已通过本地与线上联调，同时保留明确标注的构造数据演示；iFinD 配置等待用户提供，报告仍需人工复核。** 演示使用三个虚构公司，目标只用于工作流展示，不代表对用户指定标的的研究。界面和导出均标注构造数据。
+**当前版本：真实 OpenAI＋扶摇主链路已通过本地与线上联调，iFinD A股MCP已完成鉴权、工具发现与披露日期真实查询；报告仍需人工复核。** 演示使用三个虚构公司，目标只用于工作流展示，不代表对用户指定标的的研究。界面和导出均标注构造数据。
 
 ## 技术选择与复用
 
@@ -86,3 +86,7 @@ npm run build
 官方模型价（2026-10-06，标准档，百万 Token）：GPT-6 Luna 输入 $0.10／输出 $0.50；GPT-6.1 Sol 输入 $2／输出 $10。应用预算保守计入输入缓存写入的 1.25 倍费率。定价变化需重新核验后更新代码；未登记模型拒绝付费调用。
 
 本地验证消耗会在首次部署时通过 MODEL_PREUSED_CALLS／MODEL_PRECOMMITTED_MICRO_USD／MODEL_PREOBSERVED_MICRO_USD 初始化线上账本。已存在的线上账本不会被环境变量覆盖；此后只在生产环境执行付费测试。
+
+## iFinD integration verification
+
+The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.

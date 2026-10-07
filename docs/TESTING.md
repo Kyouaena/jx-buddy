@@ -52,3 +52,7 @@ iFinD 鉴权与实际 tools/list/schema、跨来源完整冲突检测、公开�
 WebMCP只读工具注册的schema和readOnly/untrusted标注正确；有效空参数返回当前线程、任务与证据ID；无效参数被拒绝且不改变研究状态。
 
 访问范围仍为拥有者私有，等待公开评测授权；iFinD仍待用户生成的服务配置，不能声称已使用。
+
+## iFinD integration verification
+
+The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.

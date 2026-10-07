@@ -37,7 +37,7 @@ export function validateReport(value: unknown, evidence: Evidence[]): Report {
   for (const c of r.claims) {
     if (!c || !["fact", "inference", "uncertain"].includes(c.kind) || typeof c.text !== "string" || !Array.isArray(c.evidenceIds) || !c.evidenceIds.every(id => typeof id === "string" && ids.has(id))) throw new Error("报告引用了不存在的证据。");
     if (c.kind !== "uncertain" && !c.evidenceIds.length) throw new Error("核心结论缺少证据。");
-    if (c.kind === "fact" && c.evidenceIds.some(id => ids.get(id)?.quality !== "ok")) throw new Error("存在缺失或过期数据，不能作为正常事实。");
+    if (c.kind !== "uncertain" && c.evidenceIds.some(id => ids.get(id)?.quality !== "ok")) throw new Error("存在缺失或过期数据，不能作为正常事实或推断；应明确标为不确定。");
   }
   let terminologyCorrected = false;
   const normalize = (text: string) => text.replace(/现金流市值比(?:率)?(\s*TTM)?(?=\s*[（(]PCF[）)])/gi, (_match, suffix: string | undefined) => { terminologyCorrected = true; return `市现率${suffix || ""}`; });
