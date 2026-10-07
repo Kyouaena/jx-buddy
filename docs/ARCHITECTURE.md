@@ -35,7 +35,7 @@ flowchart TD
 
 数据库写入使用参数化 SQL。租约避免同线程并发调用；revision 防止 stale 客户端覆盖。恢复是应用层状态回放，不提供外部请求 exactly-once。
 
-实际运行尚未覆盖供应商服务。live 接入所需 URL、工具名、schema、鉴权和时点字段由实际服务能力决定，不自行猜测。
+OpenAI 与扶摇 REST 已完成真实联调；iFinD 接入所需 URL、工具名、schema、鉴权和时点字段由实际服务能力决定，不自行猜测。
 
 ## 第二版真实接入准备
 
