@@ -1,3 +1,4 @@
+import {mappedProviderEnabled} from '../lib/harness/provider-policy.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readRPC,invokeMCP} from '../lib/harness/mcp.ts';
@@ -26,4 +27,18 @@ test('iFinD business success is code 1 and missing timestamps remain uncertain',
  const e=ifindEvidence(response,{symbols:['600519.SH'],reportYear:2025});assert.equal(e.demo,false);assert.equal(e.quality,'missing');assert.ok(e.warnings.some(w=>w.includes('更新时间')));
  assert.throws(()=>ifindEvidence({content:[{type:'text',text:'{"code":0}'}]},{symbols:['600519.SH'],reportYear:2025}),/未成功/);
  assert.throws(()=>validateReport({title:'研究',summary:'对比',limitations:[],claims:[{kind:'inference',text:'因此没有近期事件。',evidenceIds:['E3']}]},[{...e,id:'E3'}]),/不确定/);
+});
+
+ test('MCP connection failures report their protocol stage without leaking credentials',async()=>{
+ const fake:typeof fetch=async()=>{throw new Error('sensitive-provider-text');};
+ await assert.rejects(invokeMCP('https://example.com/mcp','secret-placeholder','raw','get_stock_events',{},fake),e=>e instanceof Error && /initialize/.test(e.message) && !/sensitive-provider|secret-placeholder/.test(e.message));
+ });
+
+test('iFinD is excluded from planning until explicitly enabled; owner diagnostic remains possible',()=>{
+ assert.equal(mappedProviderEnabled('ifind',true),false);
+ assert.equal(mappedProviderEnabled('ifind',true,'false'),false);
+ assert.equal(mappedProviderEnabled('ifind',true,'true'),true);
+ assert.equal(mappedProviderEnabled('ifind',true,'false',true),true);
+ assert.equal(mappedProviderEnabled('ifind',false,'true',true),false);
+ assert.equal(mappedProviderEnabled('fuyao',true),true);
 });

@@ -1,3 +1,4 @@
+import { mappedProviderEnabled } from "./provider-policy";
 import { env } from "cloudflare:workers";
 import { registry } from "./engine";
 import type { Runtime, ToolName, Evidence } from "./types";
@@ -8,11 +9,11 @@ import { reserveModelCall, recordModelCost } from "../model-budget";
 import { estimatedUsageMicroUsd, MAX_OUTPUT_TOKENS, modelPrices } from "./model-policy";
 type Mapping = { provider: "fuyao" | "ifind"; name: string; arguments: Record<string, unknown>; readOnly: true; asOfField: string; unit: string; scope: string; maxAgeDays: number; description?: string };
 const config = (): Record<string, string> => { const c = env as unknown as Record<string, string>; return { ...c, LLM_API_KEY: c.OPENAI_API_KEY || c.LLM_API_KEY, LLM_MODEL: c.OPENAI_MODEL || c.LLM_MODEL || "gpt-6-luna" }; };
-export function availability() {
+export function availability(ifindDiagnostic = false) {
   const c = config(); let map: Partial<Record<ToolName, Mapping>> = {};
   try { const parsed = JSON.parse(c.FINANCIAL_TOOL_MAP || "{}"); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) map = parsed; } catch { /* Invalid configuration disables tools. */ }
-  const mapped = (name: ToolName) => { const m = map[name]; return !!m && ["fuyao", "ifind"].includes(m.provider) && m.readOnly === true && typeof m.name === "string" && !!m.name && !!c[`${m.provider.toUpperCase()}_MCP_URL`]; };
-  return { model: !!(c.LLM_API_KEY && c.LLM_MODEL && c.LLM_MODEL in modelPrices), modelName: c.LLM_MODEL || "gpt-6-luna", tools: registry.map(t => ({ ...t, description: c.FUYAO_API_KEY && t.name === "market_snapshot" ? "A 股最新估值快照：PE TTM/MRQ、PB MRQ、PS TTM、PCF TTM，不含股价" : c.FUYAO_API_KEY && t.name === "financial_comparison" ? "指定年度合并利润表：营收、利润、EPS；金额元，EPS元/股" : map[t.name]?.description || t.description, enabled: (!!c.FUYAO_API_KEY && t.name !== "news_context") || mapped(t.name) })), providers: { fuyao: !!(c.FUYAO_API_KEY || c.FUYAO_MCP_URL), ifind: !!c.IFIND_MCP_URL } };
+  const mapped = (name: ToolName) => { const m = map[name]; return !!m && mappedProviderEnabled(m.provider, true, c.IFIND_MCP_ENABLED, ifindDiagnostic) && ["fuyao", "ifind"].includes(m.provider) && m.readOnly === true && typeof m.name === "string" && !!m.name && !!c[`${m.provider.toUpperCase()}_MCP_URL`]; };
+  return { model: !!(c.LLM_API_KEY && c.LLM_MODEL && c.LLM_MODEL in modelPrices), modelName: c.LLM_MODEL || "gpt-6-luna", tools: registry.map(t => ({ ...t, description: c.FUYAO_API_KEY && t.name === "market_snapshot" ? "A 股最新估值快照：PE TTM/MRQ、PB MRQ、PS TTM、PCF TTM，不含股价" : c.FUYAO_API_KEY && t.name === "financial_comparison" ? "指定年度合并利润表：营收、利润、EPS；金额元，EPS元/股" : map[t.name]?.description || t.description, enabled: (!!c.FUYAO_API_KEY && t.name !== "news_context") || mapped(t.name) })), ifindStatus: !c.IFIND_MCP_URL ? "unconfigured" : c.IFIND_MCP_ENABLED === "true" ? "enabled" : "unavailable", providers: { fuyao: !!(c.FUYAO_API_KEY || c.FUYAO_MCP_URL), ifind: !!c.IFIND_MCP_URL } };
 }
 function endpoint(url: string) {
   const u = new URL(url); if (u.protocol !== "https:" || u.username || u.password) throw new Error("服务地址需为不含账号密码的 HTTPS URL。"); return u;
@@ -23,8 +24,8 @@ export async function readLimited(response: Response, limit = 180000): Promise<s
   try { while (true) { const { done, value } = await reader.read(); if (done) break; total += value.length; if (total > limit) throw new Error("工具输出超过大小上限，需缩小查询范围。"); text += decoder.decode(value, { stream: true }); } return text + decoder.decode(); }
   finally { await reader.cancel().catch(() => {}); }
 }
-export function runtime(): Runtime {
-  const c = config(); const available = availability();
+export function runtime(ifindDiagnostic = false): Runtime {
+  const c = config(); const available = availability(ifindDiagnostic);
   return { tools: available.tools, model: available.model,
     async modelJSON(prompt) {
       if (!available.model) throw new Error("模型未配置。");

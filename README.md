@@ -98,3 +98,7 @@ JX Buddy 已加入实际运行的报告级 RSI：生成草稿、自检、最多�
 ### Current deployment boundary
 
 The iFinD adapter and credentials were verified locally, but production calls currently time out. The workbench reports the failure and requires explicit retry or skip; it does not fabricate results. RSI is live and bounded, but its self-review remains fallible and requires human verification.
+
+## iFinD生产可用性修正
+
+iFinD配置与生产可用性分开判断。默认`IFIND_MCP_ENABLED=false`：已知生产超时的工具不向计划器暴露，扶摇财务/估值仍正常执行。创建真实研究时记录缺少MRQ/新闻/宏观证据，不能将未查询内容作为结论。既有失败线程保留结果，用户显式跳过后继续，不重复成功的扶摇步骤。诊断入口仍为owner鉴权，只读、不消耗模型请求；只有部署环境实际诊断通过才设置`IFIND_MCP_ENABLED=true`。MCP错误现在包含协议阶段，不暴露供应商异常原文或密钥。这是对不可用数据源的诚实隔离，尚未解决iFinD生产网络连通性。

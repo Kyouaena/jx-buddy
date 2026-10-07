@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       if (!["none", "tool_failure", "missing_data", "stale_data"].includes(fault)) throw new Error("演示场景无效。");
       const memory = await database().prepare("SELECT text FROM research_memories WHERE owner = ?").bind(user.userId).first<{ text: string }>();
       const s = createState(body.goal, body.mode, memory?.text || "", fault);
-      if (body.mode === "live") s.targets = validateTargets(body.targets);
+      if (body.mode === "live") { s.targets = validateTargets(body.targets); if (availability().ifindStatus === "unavailable") s.warnings.push("iFinD线上连接尚未通过验证，已从自动计划中停用；本次不提供MRQ披露日期、新闻或宏观证据。扶摇财务与估值查询仍可执行。"); }
       await insert(user.userId, s); return json({ state: s });
     }
     if (body.action === "memory") {

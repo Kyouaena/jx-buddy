@@ -33,14 +33,17 @@ export async function invokeMCP(url: string, token: string | undefined, authStyl
   const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "application/json, text/event-stream" };
   if (token) headers.Authorization = authStyle === "raw" ? token : `Bearer ${token}`;
   async function rpc(method: string, params: unknown, id?: number) {
-    const response = await fetcher(endpoint, { method: "POST", headers: { ...headers }, body: JSON.stringify({ jsonrpc: "2.0", ...(id === undefined ? {} : { id }), method, params }), signal: AbortSignal.timeout(method === "tools/call" ? 45000 : 10000), redirect: "manual" });
+    let response: Response;
+    try { response = await fetcher(endpoint, { method: "POST", headers: { ...headers }, body: JSON.stringify({ jsonrpc: "2.0", ...(id === undefined ? {} : { id }), method, params }), signal: AbortSignal.timeout(method === "tools/call" ? 45000 : 10000), redirect: "manual" }); }
+    catch { throw new Error(`金融 MCP 在 ${method} 阶段连接失败或超时；未返回数据。请跳过并保留缺口，连接验证通过后再启用。`); }
     if (!response.ok) throw new Error(`金融 MCP HTTP ${response.status}，未生成替代数据。`);
     const session = response.headers.get("Mcp-Session-Id"); if (session) headers["Mcp-Session-Id"] = session;
     if (id === undefined || response.status === 202) { await response.body?.cancel(); return {}; }
-    return readRPC(response, id);
+    try { return await readRPC(response, id); }
+    catch (error) { if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) throw new Error(`金融 MCP 在 ${method} 阶段读取超时，未返回数据。`); throw error; }
   }
   try {
-    const initialized = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "investment-x-buddy", version: "0.2.0" } }, 1);
+    const initialized = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "jx-buddy", version: "0.2.0" } }, 1);
     headers["MCP-Protocol-Version"] = initialized.protocolVersion || "2025-06-18";
     await rpc("notifications/initialized", {});
     const list = await rpc("tools/list", {}, 2);
