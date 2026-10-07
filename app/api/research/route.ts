@@ -24,6 +24,10 @@ export async function POST(request: Request) {
   try {
     if (Number(request.headers.get("content-length") || 0) > 12000) throw new Error("请求过大。");
     const text = await request.text(); if (text.length > 12000) throw new Error("请求过大。"); const body = JSON.parse(text);
+    if (body.action === "ifind_probe") {
+      try { const e = await runtime(true).callTool("news_context", "核验600519.SH最新一期MRQ报告披露日期", { symbols: ["600519.SH"], reportYear: 2025 }); return json({ probe: { connected: true, quality: e.quality, warnings: e.warnings, source: e.source } }); }
+      catch (e) { const message = e instanceof Error ? e.message : "诊断失败"; return json({ probe: { connected: false, error: message } }); }
+    }
     if (body.action === "create") {
       if (!["demo", "live"].includes(body.mode) || typeof body.goal !== "string") throw new Error("研究参数无效。");
       const fault = body.mode === "demo" ? body.fault || "none" : "none";
