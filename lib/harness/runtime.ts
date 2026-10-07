@@ -51,6 +51,12 @@ export function runtime(ifindDiagnostic = false): Runtime {
     async callTool(name, goal, targets) {
       if (!available.tools.find(t => t.name === name)?.enabled) throw new Error("工具未配置或未批准为只读。");
       if (c.FUYAO_API_KEY && name !== "news_context") return fetchFuyao(name, targets, c.FUYAO_API_KEY);
+      if (name === "news_context" && c.IFIND_RELAY_URL && c.IFIND_RELAY_TOKEN) {
+        const u = endpoint(c.IFIND_RELAY_URL); if (u.pathname !== "/ifind" || u.search || u.hash) throw new Error("iFinD桥接地址无效。");
+        const response = await fetch(u, { method: "POST", headers: { Authorization: `Bearer ${c.IFIND_RELAY_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ symbols: targets?.symbols || [] }), signal: AbortSignal.timeout(65000), redirect: "manual" });
+        if (!response.ok) throw new Error(`iFinD只读桥接 HTTP ${response.status}，未生成替代数据。`);
+        const evidence = ifindEvidence(JSON.parse(await readLimited(response)), targets); evidence.source += " · 本机鉴权桥接"; return evidence;
+      }
       const mapping = JSON.parse(c.FINANCIAL_TOOL_MAP)[name] as Mapping; const prefix = mapping.provider.toUpperCase();
       const args = JSON.parse(JSON.stringify(mapping.arguments).replaceAll("{{goal}}", JSON.stringify(goal).slice(1,-1)).replaceAll("{{symbols}}", targets?.symbols.join(",") || ""));
       const result = await invokeMCP(c[`${prefix}_MCP_URL`], c[`${prefix}_MCP_TOKEN`], prefix === "IFIND" && c.IFIND_MCP_AUTH_STYLE === "raw" ? "raw" : "bearer", mapping.name, args);
