@@ -49,7 +49,7 @@ export default function Workbench({ userName }: { userName: string }) {
   function download() {
     if (!state?.report) return; const r = state.report;
     const md = `# ${r.title}\n\n${r.summary}\n\n${r.claims.map(c => `- **${{ fact: "事实", inference: "推断", uncertain: "不确定" }[c.kind]}** ${c.text} [${c.evidenceIds.join(", ")}]`).join("\n")}\n\n## 局限\n${r.limitations.map(l => `- ${l}`).join("\n")}\n\n## 原始证据\n${state.evidence.map(e => `### ${e.id} ${e.title}\n来源：${e.source}\n时点：${e.asOf}\n单位：${e.unit}\n口径：${e.scope}\n\n\`\`\`json\n${JSON.stringify(e.raw, null, 2)}\n\`\`\``).join("\n\n")}`;
-    const url = URL.createObjectURL(new Blob([md], { type: "text/markdown;charset=utf-8" })); const a = document.createElement("a"); a.href = url; a.download = "x-buddy-research.md"; a.click(); URL.revokeObjectURL(url);
+    const url = URL.createObjectURL(new Blob([md], { type: "text/markdown;charset=utf-8" })); const a = document.createElement("a"); a.href = url; a.download = "jx-buddy-research.md"; a.click(); URL.revokeObjectURL(url);
   }
   const done = state?.tasks.filter(t => t.status === "done").length || 0;
   return <div className={`workbench ${panel ? "" : "panel-hidden"}`}>
@@ -69,6 +69,10 @@ export default function Workbench({ userName }: { userName: string }) {
         <div className="composer"><textarea aria-label="研究目标" value={goal} maxLength={2000} onChange={e => setGoal(e.target.value)} placeholder="想研究什么？例如：比较三家公司的盈利能力、估值与风险"/><div className="composer-bottom"><span><Layers size={16}/>投资研究 Agent</span><button className="send" aria-label="开始研究" disabled={busy || !goal.trim()} onClick={() => create()}><ArrowUp size={20}/></button></div></div>
         <div className="configuration"><select aria-label="数据模式" value={mode} onChange={e => setMode(e.target.value)}><option value="demo">构造数据演示</option><option value="live">真实数据接入</option></select>{mode === "demo" && <select aria-label="演示场景" value={fault} onChange={e => setFault(e.target.value)}><option value="none">正常流程</option><option value="tool_failure">接口失败与恢复</option><option value="missing_data">数据缺失</option><option value="stale_data">数据过期</option></select>}<span>{mode === "demo" ? "虚构公司 · 不调用模型 · 无真实行情" : caps?.model ? "按已配置的模型与只读工具执行" : "模型尚未配置，真实研究不可用"}</span></div>
         {mode === "live" && <div className="live-targets"><label>研究标的（1–3 个 A 股代码）<input aria-label="真实研究股票代码" placeholder="600519.SH, 000858.SZ" value={symbols} onChange={e => setSymbols(e.target.value)} maxLength={40}/></label><label>年度报告<input aria-label="年度报告年份" type="number" min={2000} max={new Date().getUTCFullYear()-1} value={reportYear} onChange={e => setReportYear(Number(e.target.value))}/></label><p>明确股票代码避免误认同名公司。扶摇直连覆盖估值与合并利润表，新闻以可调用工具为准。</p></div>}
+        <div className="sample-heading">真实研究示例 · 点击填入，确认后才执行</div><div className="sample-list">{[
+          { title: "贵州茅台：年度利润与估值核验", symbols: "600519.SH", goal: "核验贵州茅台2025年度营业收入、归母净利润与最新估值，区分财务报告期和估值快照时点；引用证据，缺失字段标为不确定。" },
+          { title: "茅台与五粮液：盈利能力比较", symbols: "600519.SH, 000858.SZ", goal: "比较贵州茅台与五粮液2025年度收入、归母净利润及净利率，并对照最新估值；核对单位、报告期与合并口径，缺失或不可比较的数据保留不确定性。" },
+        ].map(sample => <button key={sample.title} disabled={busy} onClick={() => { setGoal(sample.goal); setSymbols(sample.symbols); setReportYear(2025); setMode("live"); setFault("none"); }}><Search size={16}/><span>{sample.title}</span><Plus size={16}/></button>)}</div>
         <div className="sample-heading">从这些研究方向开始</div><div className="sample-list">{samples.map((sample, i) => <button key={sample} onClick={() => { setGoal(sample); if (i === 2) setFault("missing_data"); }}><span className="sample-number">0{i + 1}</span><span>{sample}</span><Plus size={16}/></button>)}</div>
         <div className="start-foot"><ShieldCheck size={15}/>只读研究工具 · 原始证据可追溯 · 不提供交易指令</div>
       </div> : <div className="research-content">
