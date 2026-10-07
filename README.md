@@ -1,7 +1,7 @@
 # 投资 JX Buddy
 
-- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（当前仅拥有者访问，评测公开范围待确认）
-- 源码仓库：[Kyouaena/investment-x-buddy](https://github.com/Kyouaena/jx-buddy)（安全扫描后公开）
+- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（已于2026年10月7日设置为公开访问，操作需要ChatGPT登录，研究记录按账号隔离）
+- 源码仓库：[Kyouaena/jx-buddy](https://github.com/Kyouaena/jx-buddy)（已公开，排除密钥、本地数据库和受限金融数据）
 
 个人投资研究 Agent 网页工作台。用研究目标创建线程，检查并批准执行计划，查看原始证据，复核报告；每一步保存到数据库，可暂停、重试和恢复。
 
@@ -70,7 +70,7 @@ npm run build
 
 ## 部署
 
-本项目包含 `.openai/hosting.json`，通过 Sites 的 Worker 部署流程发布；D1 迁移由平台执行。GitHub 保存源代码，不承担动态 API 托管。公开评测前需将访问策略设置为评委可以访问，并完成真实服务联调。当前初始部署默认仅拥有者可访问。
+本项目包含 `.openai/hosting.json`，通过 Sites 的 Worker 部署流程发布；D1 迁移由平台执行。GitHub 保存源代码，不承担动态 API 托管。当前站点访问策略为public，任何持有URL的人可进入并使用ChatGPT登录。数据库仍按登录账号隔离；公开访问不代表共享已有研究记录。真实调用受全站25次模型请求和$1保守预算约束，评测建议先使用构造数据演示。
 
 ## 许可
 
