@@ -56,3 +56,5 @@ WebMCP只读工具注册的schema和readOnly/untrusted标注正确；有效空�
 ## iFinD integration verification
 
 The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.
+
+RSI新增测试覆盖隔离草稿、自检修订后发布、最多一次修订/两次自检、失败后不能重置上限、暂停与检查点恢复、停止规则、拒绝越权反馈，以及确定性校验覆盖模型“无问题”反馈。

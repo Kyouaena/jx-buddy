@@ -42,3 +42,7 @@ OpenAI 与扶摇 REST 已完成真实联调；iFinD 接入所需 URL、工具名
 扶摇 REST 只使用官方 allowlist 路径：估值 `GET /api/a-share/valuations/snapshot`、合并利润表 `GET /api/a-share/financials/income-statements`。原始业务信封完整保留；HTTP 200 不代表成功，必须 `code===0`。验证标的匹配、所选财政年度、人民币与 EPS 单位、空值和时点；缺失字段不补零。
 
 OpenAI 使用 Responses API 纯文本 JSON 输出。全站 model_budget 原子预占后发请求，不自动重试。历史恢复不接触预算表，超限拒绝请求。没有浏览器修改预算的接口。额度未配置真实 Key 前不会发生付费。
+
+## RSI（Recursive Self-Improvement）
+
+报告草稿进入隔离状态，新增 critique 与 revise 阶段形成有界递归。结构化自检反馈与独立确定性规则共同决定是否修订；最多两次自检、一次修订。通过后交给用户复核，未通过则扣留。没有自主改写代码或扩大权限，已有成本、停止、记忆审批和检查点规则持续生效。见 RSI.md。

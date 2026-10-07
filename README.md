@@ -1,7 +1,7 @@
-# 投资 X Buddy
+# 投资 JX Buddy
 
-- 在线产品：[投资 X Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（当前仅拥有者访问，评测公开范围待确认）
-- 源码仓库：[Kyouaena/investment-x-buddy](https://github.com/Kyouaena/investment-x-buddy)（当前私有）
+- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（当前仅拥有者访问，评测公开范围待确认）
+- 源码仓库：[Kyouaena/investment-x-buddy](https://github.com/Kyouaena/jx-buddy)（安全扫描后公开）
 
 个人投资研究 Agent 网页工作台。用研究目标创建线程，检查并批准执行计划，查看原始证据，复核报告；每一步保存到数据库，可暂停、重试和恢复。
 
@@ -90,3 +90,7 @@ npm run build
 ## iFinD integration verification
 
 The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.
+
+## RSI 递归式自我改进
+
+JX Buddy 已加入实际运行的报告级 RSI：生成草稿、自检、最多一次修订、再验证，然后等待用户复核。模型不能修改代码、权限、预算或原始证据，不能绕过15次/$1限制；失败和恢复也不会重置上限。详见 [RSI机制与安全边界](docs/RSI.md)。
