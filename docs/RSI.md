@@ -27,3 +27,7 @@
 `tests/rsi.test.ts` 覆盖成功修订、达到上限、确定性规则覆盖模型“通过”、暂停/序列化恢复/停止，以及拒绝越权反馈。
 
 参考官方迭代评估思路：[OpenAI Self-Evolving Agents](https://developers.openai.com/cookbook/examples/partners/self_evolving_agents/autonomous_agent_retraining)。本项目实现的是自身报告迭代，没有集成该示例的训练或GEPA流程。
+
+## Final RSI live verification
+
+A production run completed 2 reviews and 1 revision, then entered user review. The original financial evidence remained frozen. The budget was not reset: 11/15 model requests, approximately $0.0188/$1 conservatively reserved. iFinD authenticated successfully in direct and local Worker tests, but its official endpoint timed out from the production Worker environment. Two bounded attempts stopped; an explicit skip preserved the gap. The resulting report did not fabricate MRQ dates or event data. No claim is made that production iFinD connectivity is currently reliable.

@@ -41,3 +41,7 @@ Codex 逐项核验真实报告发现模型将 PCF 写为“现金流市值比”
 The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorization authentication succeeded; 10 tools were discovered. A real get_stock_events call returned code=1 and latest-MRQ disclosure dates, not a complete event list for the requested date window. The adapter preserves the original response, marks missing update-time/source-link metadata as uncertain, and prevents normal facts or inferences based on this incomplete evidence. Both the direct protocol probe and the local Worker route passed. No OpenAI model requests were used for these checks, and the existing 15-request/$1 budget was preserved.
 
 用户授权加入RSI报告改进逻辑：模型参与独立自检和一次限定修订，确定性规则不能由模型覆盖。它不是权重训练或无限自我提升。源码公开前检查当前文件与完整Git历史，排除密钥、数据库、运行文件、日志和受限金融数据；真实金融原始返回仍只保存在私密运行数据中。
+
+## Final RSI live verification
+
+A production run completed 2 reviews and 1 revision, then entered user review. The original financial evidence remained frozen. The budget was not reset: 11/15 model requests, approximately $0.0188/$1 conservatively reserved. iFinD authenticated successfully in direct and local Worker tests, but its official endpoint timed out from the production Worker environment. Two bounded attempts stopped; an explicit skip preserved the gap. The resulting report did not fabricate MRQ dates or event data. No claim is made that production iFinD connectivity is currently reliable.

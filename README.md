@@ -94,3 +94,7 @@ The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorizatio
 ## RSI 递归式自我改进
 
 JX Buddy 已加入实际运行的报告级 RSI：生成草稿、自检、最多一次修订、再验证，然后等待用户复核。模型不能修改代码、权限、预算或原始证据，不能绕过15次/$1限制；失败和恢复也不会重置上限。详见 [RSI机制与安全边界](docs/RSI.md)。
+
+### Current deployment boundary
+
+The iFinD adapter and credentials were verified locally, but production calls currently time out. The workbench reports the failure and requires explicit retry or skip; it does not fabricate results. RSI is live and bounded, but its self-review remains fallible and requires human verification.
