@@ -19,7 +19,7 @@
 
 ## 尚未验证
 
-iFinD 鉴权与实际 tools/list/schema、跨来源完整冲突检测、公开评委访问策略、平台实际账单核对、长任务后台执行、完备合规审查。
+iFinD 生产环境稳定连接、跨来源完整冲突检测、公开评委访问策略、平台实际账单核对、长任务后台执行、完备合规审查。
 
 本版本通过演示运行不意味着这些项目已通过。
 
@@ -62,3 +62,16 @@ RSI新增测试覆盖隔离草稿、自检修订后发布、最多一次修订/�
 ## Final RSI live verification
 
 A production run completed 2 reviews and 1 revision, then entered user review. The original financial evidence remained frozen. The budget was not reset: 11/15 model requests, approximately $0.0188/$1 conservatively reserved. iFinD authenticated successfully in direct and local Worker tests, but its official endpoint timed out from the production Worker environment. Two bounded attempts stopped; an explicit skip preserved the gap. The resulting report did not fabricate MRQ dates or event data. No claim is made that production iFinD connectivity is currently reliable.
+
+## 本次交付核对与预算更新
+
+用户授权将整站模型请求上限从15改为25；累计调用与金额不清零，$1限额保持。历史11/15记录保留当时状态。并发预算测试现在验证第26次拒绝。
+
+| 交付要求 | 已有证据 | 限制 |
+|---|---|---|
+| 主链路 | 本地HTTP+D1集成；真实OpenAI与扶摇；线上RSI两轮自检一次修订进入用户复核 | 测试通过不代表所有研究目标均已覆盖 |
+| 数据缺失/接口失败 | 缺失、过期、重试、显式跳过；线上iFinD两次超时后保留缺口 | iFinD线上连接尚未修复 |
+| 极端/合规边界 | 预算耗尽、并发原子扣费、停止恢复、拒绝交易目标、无引用/越权反馈拒绝 | 非完整法律合规审查 |
+| 评委访问 | 产品URL可操作，当前仅用户本人有访问权 | 提交前需设置评委访问权限 |
+
+演示方案见[120秒产品录屏脚本](DEMO_VIDEO.md)。

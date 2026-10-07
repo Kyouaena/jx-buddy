@@ -18,7 +18,7 @@ export async function reserveModelCall(prompt: string, model: string) {
   const initial = initialUsage();
   await db.prepare("INSERT OR IGNORE INTO model_budget (id, calls, committed_micro_usd, observed_micro_usd, updated) VALUES (?, ?, ?, ?, ?)").bind(budgetId, initial.calls, initial.committed, initial.observed, Date.now()).run();
   const result = await db.prepare(BUDGET_RESERVE_SQL).bind(reservation.reservationMicroUsd, Date.now(), budgetId, MAX_MODEL_CALLS, reservation.reservationMicroUsd, MAX_MICRO_USD).run();
-  if (!result.meta.changes) throw new Error("工作台累计模型请求已达 15 次，或下一次请求可能超过 $1 保守预算，已阻止调用。");
+  if (!result.meta.changes) throw new Error(`工作台累计模型请求已达 ${MAX_MODEL_CALLS} 次，或下一次请求可能超过 $1 保守预算，已阻止调用。`);
   return reservation;
 }
 export async function recordModelCost(microUsd: number) {
