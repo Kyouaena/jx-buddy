@@ -91,3 +91,5 @@ iFinD配置与生产可用性分开判断。默认`IFIND_MCP_ENABLED=false`：�
 ## 截止前iFinD连接诊断
 
 显式allow_custom_ports仍在生产initialize阶段超时。再次本机tools/list成功，10个工具。临时鉴权桥接本机查询HTTP200、供应商code=1；401/400防护通过。线上桥接待网页实际验证，不能提前宣称成功。见[桥接说明](IFIND_BRIDGE.md)。
+
+线上工作台诊断已实际返回“连接与查询成功 · iFinD MCP · get_stock_events · 本机鉴权桥接”；证据缺失仍标为需核验。随后开启IFIND_MCP_ENABLED。诊断没有消耗OpenAI请求；模型累计仍15/25。临时HTTPS桥接401鉴权拒绝、400参数拒绝和HTTP200/code=1真实响应均通过。依赖本机服务和隧道保持运行，不承诺常驻稳定性。

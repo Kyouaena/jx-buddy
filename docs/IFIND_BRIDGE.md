@@ -11,3 +11,5 @@
 安全边界：强随机Bearer鉴权，固定官方目的地址与工具，参数验证，单请求并发，30次/小时上限，2KB请求上限，180KB供应商响应上限，HTTPS隧道，拒绝跳转，不返回供应商异常原文；不接收浏览器跨域调用。永久部署前还需完善访问监控和限流。停止：对两个终端Ctrl-C，移除云端IFIND_RELAY_TOKEN/IFIND_RELAY_URL并停用IFIND_MCP_ENABLED。
 
 验证脚本`node scripts/check-ifind-relay.mjs HTTPS_ORIGIN`检查401鉴权拒绝、400无效参数拒绝及code=1的真实返回，仅打印状态，不打印密钥或原始金融数据。诊断会消耗iFinD次数，不调用OpenAI。
+
+线上工作台诊断已实际返回“连接与查询成功 · iFinD MCP · get_stock_events · 本机鉴权桥接”；证据缺失仍标为需核验。随后开启IFIND_MCP_ENABLED。诊断没有消耗OpenAI请求；模型累计仍15/25。临时HTTPS桥接401鉴权拒绝、400参数拒绝和HTTP200/code=1真实响应均通过。依赖本机服务和隧道保持运行，不承诺常驻稳定性。
