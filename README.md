@@ -1,6 +1,6 @@
 # 投资 JX Buddy
 
-- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（已于2026年10月7日设置为公开访问，操作需要ChatGPT登录，研究记录按账号隔离）
+- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（已于2026年10月7日设置为公开访问，免登录游客可完整体验构造数据研究；真实接入使用ChatGPT登录，账号记录隔离）
 - 源码仓库：[Kyouaena/jx-buddy](https://github.com/Kyouaena/jx-buddy)（已公开，排除密钥、本地数据库和受限金融数据）
 
 个人投资研究 Agent 网页工作台。用研究目标创建线程，检查并批准执行计划，查看原始证据，复核报告；每一步保存到数据库，可暂停、重试和恢复。
@@ -70,7 +70,7 @@ npm run build
 
 ## 部署
 
-本项目包含 `.openai/hosting.json`，通过 Sites 的 Worker 部署流程发布；D1 迁移由平台执行。GitHub 保存源代码，不承担动态 API 托管。当前站点访问策略为public，任何持有URL的人可进入并使用ChatGPT登录。数据库仍按登录账号隔离；公开访问不代表共享已有研究记录。真实调用受全站40次模型请求和$1保守预算约束，评测建议先使用构造数据演示。
+本项目包含 `.openai/hosting.json`，通过 Sites 的 Worker 部署流程发布；D1 迁移由平台执行。GitHub 保存源代码，不承担动态 API 托管。当前站点访问策略为public，任何持有URL的人可直接体验游客工作台，或使用ChatGPT登录。数据库仍按登录账号隔离；公开访问不代表共享已有研究记录。真实调用受全站40次模型请求和$1保守预算约束，评测建议先使用构造数据演示。
 
 ## 许可
 
@@ -106,3 +106,7 @@ iFinD配置与生产可用性分开判断。默认`IFIND_MCP_ENABLED=false`：�
 临时iFinD连接桥接及其本机依赖详见[桥接说明](docs/IFIND_BRIDGE.md)。线上直连已定位到initialize超时，根因未确认；桥接本机实际查询与鉴权/参数拒绝已验证。线上桥接结果以网页诊断为准。
 
 线上工作台诊断已实际返回“连接与查询成功 · iFinD MCP · get_stock_events · 本机鉴权桥接”；证据缺失仍标为需核验。随后开启IFIND_MCP_ENABLED。诊断没有消耗OpenAI请求；模型累计仍15/25。临时HTTPS桥接401鉴权拒绝、400参数拒绝和HTTP200/code=1真实响应均通过。依赖本机服务和隧道保持运行，不承诺常驻稳定性。
+
+## 游客免登录体验
+
+打开产品URL，未登录者直接进入游客模式；已登录者可选择[游客体验](https://investment-x-buddy.kyoula.chatgpt.site/guest)。游客复用同一LangGraph Harness，可规划、批准、执行构造工具、查看证据和RSI、复核导出报告、恢复检查点及归档删除。游客不调用真实模型或供应商，不读取登录账号的数据库，不消耗40次/$1付费额度。记录与确认记忆仅保存在该浏览器localStorage，最多30条线程、每线程20份检查点、总存储约2MB；清除浏览器数据会丢失，非云端同步。API鉴权保持，游客本地状态不构成服务端登录凭据。
