@@ -16,6 +16,7 @@ export type RunState = {
   fault: "none" | "tool_failure" | "missing_data" | "stale_data";
   targets?: { symbols: string[]; reportYear: number };
   rsi?: RSI;
+  archived?: boolean;
 };
 export type ToolRegistration = { name: ToolName; description: string; permission: "read"; enabled: boolean };
 export type Runtime = { tools: ToolRegistration[]; model: boolean; callTool: (name: ToolName, goal: string, targets?: RunState["targets"]) => Promise<Omit<Evidence, "id">>; modelJSON: (prompt: string) => Promise<{ value: unknown; tokens: number }> };

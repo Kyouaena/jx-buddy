@@ -1,7 +1,7 @@
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { createState, advance, control, registry, trace } from "../../../lib/harness/engine";
 import { availability, runtime } from "../../../lib/harness/runtime";
-import { database, insert, load, withLease } from "../../../lib/research-store";
+import { database, insert, load, withLease, removeThread } from "../../../lib/research-store";
 import type { RunState } from "../../../lib/harness/types";
 import { validateTargets } from "../../../lib/harness/fuyao";
 import { budgetStatus } from "../../../lib/model-budget";
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     if (id) { const state = await load(user.userId, id); const cps = await database().prepare("SELECT id, revision, created FROM research_checkpoints WHERE thread_id = ? AND owner = ? ORDER BY revision DESC LIMIT 20").bind(id, user.userId).all(); return json({ state, checkpoints: cps.results }); }
     const rows = await database().prepare("SELECT id, goal, state, updated FROM research_threads WHERE owner = ? ORDER BY updated DESC LIMIT 50").bind(user.userId).all<{ id: string; goal: string; state: string; updated: number }>();
     const memory = await database().prepare("SELECT text FROM research_memories WHERE owner = ?").bind(user.userId).first<{ text: string }>();
-    return json({ threads: rows.results.map(r => ({ id: r.id, goal: r.goal, status: JSON.parse(r.state).status, mode: JSON.parse(r.state).mode, updated: r.updated })), memory: memory?.text || "", capabilities: availability(), modelBudget: await budgetStatus(), registry });
+    return json({ threads: rows.results.map(r => ({ id: r.id, goal: r.goal, status: JSON.parse(r.state).status, mode: JSON.parse(r.state).mode, updated: r.updated, revision: JSON.parse(r.state).revision, archived: !!JSON.parse(r.state).archived })), memory: memory?.text || "", capabilities: availability(), modelBudget: await budgetStatus(), registry });
   } catch (e) { return problem(e); }
 }
 export async function POST(request: Request) {
@@ -38,7 +38,10 @@ export async function POST(request: Request) {
       await database().prepare("INSERT INTO research_memories (owner, text, updated) VALUES (?, ?, ?) ON CONFLICT(owner) DO UPDATE SET text = excluded.text, updated = excluded.updated").bind(user.userId, body.text.trim(), Date.now()).run(); return json({ memory: body.text.trim() });
     }
     if (typeof body.id !== "string" || !Number.isInteger(body.revision)) throw new Error("缺少线程或版本信息。");
+    if (body.action === "delete") { if (body.confirmed !== true) throw new Error("删除需用户确认。"); await removeThread(user.userId, body.id, body.revision); return json({ deleted: body.id }); }
     const next = await withLease(user.userId, body.id, body.revision, async s => {
+      if (["archive", "unarchive"].includes(body.action)) { if (["planning", "running"].includes(s.status)) throw new Error("请先暂停或停止研究，再归档。"); s.archived = body.action === "archive"; return s; }
+      if (s.archived) throw new Error("请先恢复已归档线程。");
       if (body.action === "tick") { const rt = runtime(); if (s.mode === "demo") rt.tools = registry; return advance(s, rt); }
       if (body.action === "restore") {
         if (!["paused", "failed", "stopped", "review", "complete"].includes(s.status)) throw new Error("请先暂停研究，再恢复历史检查点。");

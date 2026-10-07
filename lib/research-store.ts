@@ -25,3 +25,17 @@ export async function withLease(owner: string, id: string, expected: number, fn:
     return next;
   } finally { await db.prepare("UPDATE research_threads SET lease = NULL, lease_until = 0 WHERE id = ? AND owner = ? AND lease = ?").bind(id, owner, lease).run(); }
 }
+
+export async function removeThread(owner: string, id: string, expected: number) {
+  const db = database(); const lease = crypto.randomUUID(); const now = Date.now();
+  const acquired = await db.prepare("UPDATE research_threads SET lease = ?, lease_until = ? WHERE id = ? AND owner = ? AND revision = ? AND lease_until < ?").bind(lease, now + 90000, id, owner, expected, now).run();
+  if (!acquired.meta.changes) throw new Error("线程正在执行或已更新，请刷新后再操作。");
+  try {
+    const s = await load(owner, id);
+    if (["planning", "running"].includes(s.status)) throw new Error("请先暂停或停止研究，再删除。");
+    await db.batch([
+      db.prepare("DELETE FROM research_checkpoints WHERE thread_id = ? AND owner = ? AND EXISTS (SELECT 1 FROM research_threads WHERE id = ? AND owner = ? AND lease = ?)").bind(id, owner, id, owner, lease),
+      db.prepare("DELETE FROM research_threads WHERE id = ? AND owner = ? AND lease = ?").bind(id, owner, lease),
+    ]);
+  } finally { await db.prepare("UPDATE research_threads SET lease = NULL, lease_until = 0 WHERE id = ? AND owner = ? AND lease = ?").bind(id, owner, lease).run(); }
+}
