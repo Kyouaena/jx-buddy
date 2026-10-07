@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { BUDGET_RESERVE_SQL, MAX_MODEL_CALLS, MAX_MICRO_USD } from '../lib/harness/model-policy.ts';
-test('durable SQLite budget atomically blocks request 26 and reservations beyond $1',()=>{
+test('durable SQLite budget atomically blocks request 41 and reservations beyond $1',()=>{
  const migration = readdirSync(new URL('../drizzle/',import.meta.url)).filter(f=>f.endsWith('.sql')).map(f=>readFileSync(new URL(`../drizzle/${f}`,import.meta.url),'utf8')).join('\n');
  const code=String.raw`
 import sqlite3,json,sys,tempfile,threading,os

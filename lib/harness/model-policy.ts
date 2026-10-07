@@ -1,7 +1,7 @@
 // Standard, short-context prices checked against official model pages on 2026-10-06.
 // Conservative input rate also covers the documented 1.25x cache-write rate.
 export const modelPrices = { "gpt-6-luna": { input: 0.1, output: 0.5 }, "gpt-6.1-sol": { input: 2, output: 10 }, "gpt-5.6-luna": { input: 0.2, output: 1.2 } };
-export const MAX_MODEL_CALLS = 25;
+export const MAX_MODEL_CALLS = 40;
 export const MAX_MICRO_USD = 1000000;
 export const MAX_OUTPUT_TOKENS = 2200;
 export function estimateReservation(prompt: string, model: string) {

@@ -34,8 +34,8 @@ test('unsupported news, response ticker mismatch and invalid research targets fa
  await assert.rejects(fetchFuyao('market_snapshot',targets,'test-placeholder',async()=>Response.json(envelope([valuation('000001.SZ')])),now),/不一致/);
  assert.throws(()=>validateTargets({symbols:['600519'],reportYear:2025}),/代码/);assert.throws(()=>validateTargets({symbols:['600519.SH'],reportYear:9999}),/年份/);
 });
-test('budget reservation uses current model prices and protects total 25 requests/$1',()=>{
- assert.equal(MAX_MODEL_CALLS,25);assert.equal(MAX_MICRO_USD,1000000);
+test('budget reservation uses current model prices and protects total 40 requests/$1',()=>{
+ assert.equal(MAX_MODEL_CALLS,40);assert.equal(MAX_MICRO_USD,1000000);
  const cheap=estimateReservation('输出 JSON 财务研究','gpt-6-luna');const sol=estimateReservation('输出 JSON 财务研究','gpt-6.1-sol');
  assert.ok(sol.reservationMicroUsd>cheap.reservationMicroUsd);assert.ok(cheap.reservationMicroUsd>estimatedUsageMicroUsd(20,20,'gpt-6-luna'));
  assert.throws(()=>estimateReservation('x'.repeat(28001),'gpt-6-luna'),/28 KB/);assert.throws(()=>estimateReservation('JSON','unknown-model'),/未登记/);
