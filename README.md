@@ -1,6 +1,6 @@
 # 投资 JX Buddy
 
-- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（已于2026年10月7日设置为公开访问，免登录游客可完整体验构造数据研究；真实接入使用ChatGPT登录，账号记录隔离）
+- 在线产品：[投资 JX Buddy](https://investment-x-buddy.kyoula.chatgpt.site)（已于2026年10月7日设置为公开访问，游客与登录用户均可使用真实研究；会话与账号记录隔离）
 - 源码仓库：[Kyouaena/jx-buddy](https://github.com/Kyouaena/jx-buddy)（已公开，排除密钥、本地数据库和受限金融数据）
 
 个人投资研究 Agent 网页工作台。用研究目标创建线程，检查并批准执行计划，查看原始证据，复核报告；每一步保存到数据库，可暂停、重试和恢复。
@@ -109,4 +109,6 @@ iFinD配置与生产可用性分开判断。默认`IFIND_MCP_ENABLED=false`：�
 
 ## 游客免登录体验
 
-打开产品URL，未登录者直接进入游客模式；已登录者可选择[游客体验](https://investment-x-buddy.kyoula.chatgpt.site/guest)。游客复用同一LangGraph Harness，可规划、批准、执行构造工具、查看证据和RSI、复核导出报告、恢复检查点及归档删除。游客不调用真实模型或供应商，不读取登录账号的数据库，不消耗40次/$1付费额度。记录与确认记忆仅保存在该浏览器localStorage，最多30条线程、每线程20份检查点、总存储约2MB；清除浏览器数据会丢失，非云端同步。API鉴权保持，游客本地状态不构成服务端登录凭据。
+用户已授权游客使用真实模型与金融工具，游客与账号用户共用整站累计40次模型请求／$1预算，不重置此前消耗。公开首页未登录时进入游客工作台，已登录者也可打开 `/guest` 单独体验。游客使用服务端HMAC签名的随机会话Cookie，HttpOnly、HTTPS Secure、SameSite Strict，有效7天；跨站或缺Origin的游客写请求被拒绝。数据库按游客owner隔离，不借用站点拥有者身份。清除Cookie、会话到期或更换浏览器会失去旧游客记录的访问；登录不自动合并访客记录。原构造演示的localStorage数据未删除，但新工作台使用独立服务端会话。
+
+`GUEST_SESSION_SECRET` 为32字符以上的随机服务端Secret；缺少配置时拒绝签发游客会话。可在 `.dev.vars` 配置用于本地开发，线上通过Sites Secret设置，不能提交真实值。游客和账号均使用同一Harness、只读工具、计划审批、检查点、RSI、报告校验和原子模型预算。构造演示仍不调用模型；真实模式才产生付费调用。游客最多保留30条研究。iFinD是否可用取决于实际供应商和桥接连通性，游客授权不会修复数据源超时。

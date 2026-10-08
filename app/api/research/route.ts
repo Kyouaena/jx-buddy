@@ -1,3 +1,5 @@
+import { env } from "cloudflare:workers";
+import { researchIdentity, GuestSessionError } from "../../../lib/guest-session";
 import { getChatGPTUser } from "../../chatgpt-auth";
 import { createState, advance, control, registry, trace } from "../../../lib/harness/engine";
 import { availability, runtime } from "../../../lib/harness/runtime";
@@ -6,20 +8,27 @@ import type { RunState } from "../../../lib/harness/types";
 import { validateTargets } from "../../../lib/harness/fuyao";
 import { budgetStatus } from "../../../lib/model-budget";
 export const dynamic = "force-dynamic";
-const json = (data: unknown, status = 200) => Response.json(data, { status });
-function problem(e: unknown) { const message = e instanceof Error ? e.message : "研究服务暂不可用。"; return json({ error: message }, /不存在/.test(message) ? 404 : /线程正在/.test(message) ? 409 : 400); }
+const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { "Cache-Control":"no-store" } });
+function problem(e: unknown) { const message = e instanceof Error ? e.message : "研究服务暂不可用。"; return json({ error: message }, e instanceof GuestSessionError ? e.status : /不存在/.test(message) ? 404 : /线程正在/.test(message) ? 409 : 400); }
 export async function GET(request: Request) {
-  const user = await getChatGPTUser(); if (!user) return json({ error: "请先登录。" }, 401);
+  let cookie: string | undefined;
+  const reply = (value: unknown) => { const response = json(value); if (cookie) response.headers.set("Set-Cookie",cookie); return response; };
   try {
+    const signedIn = await getChatGPTUser();
+    const identity = await researchIdentity(request, signedIn?.userId || null, (env as unknown as Record<string,string>).GUEST_SESSION_SECRET || "", !new URL(request.url).searchParams.has("id"));
+    cookie = identity.cookie; const user = { userId:identity.owner };
     const query = new URL(request.url).searchParams; const id = query.get("id");
-    if (id) { const state = await load(user.userId, id); const cps = await database().prepare("SELECT id, revision, created FROM research_checkpoints WHERE thread_id = ? AND owner = ? ORDER BY revision DESC LIMIT 20").bind(id, user.userId).all(); return json({ state, checkpoints: cps.results }); }
+    if (id) { const state = await load(user.userId, id); const cps = await database().prepare("SELECT id, revision, created FROM research_checkpoints WHERE thread_id = ? AND owner = ? ORDER BY revision DESC LIMIT 20").bind(id, user.userId).all(); return reply({ state, checkpoints: cps.results }); }
     const rows = await database().prepare("SELECT id, goal, state, updated FROM research_threads WHERE owner = ? ORDER BY updated DESC LIMIT 50").bind(user.userId).all<{ id: string; goal: string; state: string; updated: number }>();
     const memory = await database().prepare("SELECT text FROM research_memories WHERE owner = ?").bind(user.userId).first<{ text: string }>();
-    return json({ threads: rows.results.map(r => ({ id: r.id, goal: r.goal, status: JSON.parse(r.state).status, mode: JSON.parse(r.state).mode, updated: r.updated, revision: JSON.parse(r.state).revision, archived: !!JSON.parse(r.state).archived })), memory: memory?.text || "", capabilities: availability(), modelBudget: await budgetStatus(), registry });
+    return reply({ threads: rows.results.map(r => ({ id: r.id, goal: r.goal, status: JSON.parse(r.state).status, mode: JSON.parse(r.state).mode, updated: r.updated, revision: JSON.parse(r.state).revision, archived: !!JSON.parse(r.state).archived })), memory: memory?.text || "", capabilities: availability(), modelBudget: await budgetStatus(), registry });
   } catch (e) { return problem(e); }
 }
 export async function POST(request: Request) {
-  const user = await getChatGPTUser(); if (!user) return json({ error: "请先登录。" }, 401);
+  let identity;
+  try { const signedIn = await getChatGPTUser(); identity = await researchIdentity(request, signedIn?.userId || null, (env as unknown as Record<string,string>).GUEST_SESSION_SECRET || ""); }
+  catch (e) { return problem(e); }
+  const user = { userId:identity.owner };
   if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "请求来源不匹配。" }, 403);
   try {
     if (Number(request.headers.get("content-length") || 0) > 12000) throw new Error("请求过大。");
@@ -32,6 +41,7 @@ export async function POST(request: Request) {
       if (!["demo", "live"].includes(body.mode) || typeof body.goal !== "string") throw new Error("研究参数无效。");
       const fault = body.mode === "demo" ? body.fault || "none" : "none";
       if (!["none", "tool_failure", "missing_data", "stale_data"].includes(fault)) throw new Error("演示场景无效。");
+      if (identity.guest) { const count = await database().prepare("SELECT COUNT(*) AS n FROM research_threads WHERE owner = ?").bind(user.userId).first<{n:number}>(); if ((count?.n || 0) >= 30) throw new Error("游客最多保留30条研究，请先删除部分记录。"); }
       const memory = await database().prepare("SELECT text FROM research_memories WHERE owner = ?").bind(user.userId).first<{ text: string }>();
       const s = createState(body.goal, body.mode, memory?.text || "", fault);
       if (body.mode === "live") { s.targets = validateTargets(body.targets); if (availability().ifindStatus === "unavailable") s.warnings.push("iFinD线上连接尚未通过验证，已从自动计划中停用；本次不提供MRQ披露日期、新闻或宏观证据。扶摇财务与估值查询仍可执行。"); }

@@ -45,3 +45,7 @@ The official A-share Streamable HTTP MCP endpoint was verified. Raw Authorizatio
 ## Final RSI live verification
 
 A production run completed 2 reviews and 1 revision, then entered user review. The original financial evidence remained frozen. The budget was not reset: 11/15 model requests, approximately $0.0188/$1 conservatively reserved. iFinD authenticated successfully in direct and local Worker tests, but its official endpoint timed out from the production Worker environment. Two bounded attempts stopped; an explicit skip preserved the gap. The resulting report did not fabricate MRQ dates or event data. No claim is made that production iFinD connectivity is currently reliable.
+
+## 2026年10月8日游客真实接入授权
+
+用户明确授权游客消耗付费额度。游客现在使用独立HMAC签名会话与服务端数据库，不复用拥有者身份；可选真实模型和金融工具，继续受整站40次/$1原子预算、审批、只读工具和RSI限制。此前不调用模型的本地构造游客说明为历史状态。签名密钥仅在服务端Secret与忽略的本机配置中，不写入公开源码。

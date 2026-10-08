@@ -7,7 +7,7 @@ async function req(body, query = '', expected = 200, authenticated = true) {
  const r = await fetch(`${base}/api/research${query}`, { ...(body ? {method:'POST', body:JSON.stringify(body)}:{}), headers:{ ...(authenticated ? {cookie}:{}), ...(body ? {'Content-Type':'application/json', Origin:base}: {}) } });
  const value = await r.json(); assert.equal(r.status, expected, JSON.stringify(value)); return value;
 }
-await req(undefined, '', 401, false);
+await req({action:'create',mode:'demo',goal:'未建立游客会话'}, '', 401, false);
 await req({action:'create', goal:'', mode:'demo'}, '', 400);
 let { state: s } = await req({action:'create', goal:'集成验证：比较样本财务与风险', mode:'demo', fault:'none'});
 let r = await req({action:'tick', id:s.id, revision:s.revision}); s=r.state; assert.equal(s.status,'approval');
